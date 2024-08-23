@@ -45,6 +45,12 @@ def search_flights(access_token, origin, destination, departure_date):
         'departureDate': departure_date,
         #'currencyCode': 'USD'
     }
+
+    # Print the request details for debugging
+    st.write("Request URL:", flight_search_url)
+    st.write("Request Headers:", headers)
+    st.write("Request Params:", params)
+    
     response = requests.get(flight_search_url, headers=headers, params=params)
     return response.json()
 
