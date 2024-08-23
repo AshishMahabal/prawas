@@ -11,72 +11,47 @@ st.set_page_config(
     #page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
 )
 
-# Load API keys from config file
-#def load_config(config_file='config.ini'):
-def load_config():
-    # config = configparser.ConfigParser()
-    # config.read(config_file)
-    api_key = st.secrets["amadeus"]["api_key"]
-    api_secret = st.secrets["amadeus"]["api_secret"]
-    return api_key, api_secret
+# Load your API keys from config or environment variables
+api_key = st.secrets["amadeus"]["api_key"]
+api_secret = st.secrets["amadeus"]["api_secret"]
 
-# Get access token from Amadeus API
-def get_access_token(api_key, api_secret):
-    auth_url = 'https://test.api.amadeus.com/v1/security/oauth2/token'
-    auth_data = {
-        'grant_type': 'client_credentials',
-        'client_id': api_key,
-        'client_secret': api_secret
-    }
-    response = requests.post(auth_url, data=auth_data)
-    st.write(response.status_code)  # Print the status code to see if the request was successful
-    st.write(response.json())  # Print the raw response for debugging
-    return response.json().get('access_token')
+# Initialize the Amadeus client
+amadeus = Client(
+    client_id=api_key,
+    client_secret=api_secret
+)
 
-# Search for flights
-def search_flights(access_token, origin, destination, departure_date):
-    headers = {
-        'Authorization': f'Bearer {access_token}'
-    }
-    flight_search_url = 'https://test.api.amadeus.com/v2/shopping/flight-offers'
-    params = {
-        'originLocationCode': origin,
-        'destinationLocationCode': destination,
-        'departureDate': departure_date,
-        #'currencyCode': 'USD'
-    }
-
-    # Print the request details for debugging
-    st.write("Request URL:", flight_search_url)
-    st.write("Request Headers:", headers)
-    st.write("Request Params:", params)
-    
-    response = requests.get(flight_search_url, headers=headers, params=params)
-    return response.json()
+# Example function to search for flights
+def search_flights(origin, destination, departure_date):
+    try:
+        response = amadeus.shopping.flight_offers_search.get(
+            originLocationCode=origin,
+            destinationLocationCode=destination,
+            departureDate=departure_date,
+            adults=1
+        )
+        return response.data
+    except ResponseError as error:
+        st.write(f"Error: {error}")
+        return None
 
 # Streamlit UI
 def main():
     st.title("Flight Search App")
-    
+
     origin = st.text_input("Origin", "LAX")
     destination = st.text_input("Destination", "JFK")
     departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
-    
-    if st.button("Search Flights"):
-        api_key, api_secret = load_config()
-        access_token = get_access_token(api_key, api_secret)
-        flight_offers = search_flights(access_token, origin, destination, departure_date)
-        
-        if flight_offers:
-            for offer in flight_offers.get('data', []):
-                st.write("Flight found!")
-                # Display flight details
-            if not flight_offers.get('data'):
-                st.write("No flights found.")
-        else:
-            st.write("No flights found or an error occurred.")
 
+    if st.button("Search Flights"):
+        flights = search_flights(origin, destination, departure_date)
+        if flights:
+            for flight in flights:
+                st.write(f"Flight from {flight['itineraries'][0]['segments'][0]['departure']['iataCode']} "
+                         f"to {flight['itineraries'][0]['segments'][0]['arrival']['iataCode']} "
+                         f"at {flight['itineraries'][0]['segments'][0]['departure']['at']}")
+        else:
+            st.write("No flights found.")
 
 if __name__ == "__main__":
     main()
-
