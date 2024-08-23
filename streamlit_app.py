@@ -56,6 +56,7 @@ def main():
     
     if st.button("Search Flights"):
         api_key, api_secret = load_config()
+        st.write(api_key)
         access_token = get_access_token(api_key, api_secret)
         st.write(access_token)
         flight_offers = search_flights(access_token, origin, destination, departure_date)
