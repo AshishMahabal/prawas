@@ -12,7 +12,8 @@ st.set_page_config(
 )
 
 # Load API keys from config file
-def load_config(config_file='config.ini'):
+#def load_config(config_file='config.ini'):
+def load_config():
     # config = configparser.ConfigParser()
     # config.read(config_file)
     api_key = st.secrets["amadeus"]["api_key"]
