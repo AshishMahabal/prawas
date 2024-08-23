@@ -7,15 +7,14 @@ amadeus = Client(
     client_secret=st.secrets["amadeus"]["api_secret"]
 )
 
-# Search for flights with a limit on max stops
-def search_flights(origin, destination, departure_date, max_stops=1):
+# Search for flights
+def search_flights(origin, destination, departure_date):
     try:
         response = amadeus.shopping.flight_offers_search.get(
             originLocationCode=origin,
             destinationLocationCode=destination,
             departureDate=departure_date,
-            adults=1,
-            max=1 if max_stops is None else max_stops
+            adults=1
         )
         return response.data
     except ResponseError as error:
@@ -34,19 +33,32 @@ def main():
     max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
 
     if st.button("Search Flights"):
-        flights = search_flights(origin, destination, departure_date, max_stops)
+        flights = search_flights(origin, destination, departure_date)
         if flights:
+            filtered_flights = []
             for flight in flights:
-                price = flight['price']['total']
-                st.write(f"Total Price: {price} {flight['price']['currency']}")
-                
-                for itinerary in flight['itineraries']:
-                    for segment in itinerary['segments']:
-                        st.write(f"Flight from {segment['departure']['iataCode']} "
-                                 f"to {segment['arrival']['iataCode']} "
-                                 f"at {segment['departure']['at']}")
+                stopovers = len(flight['itineraries'][0]['segments']) - 1
+                if stopovers <= max_stops:
+                    filtered_flights.append(flight)
+                    
+            if filtered_flights:
+                for flight in filtered_flights:
+                    price = flight['price']['total']
+                    st.write(f"Total Price: {price} {flight['price']['currency']}")
+                    
+                    for itinerary in flight['itineraries']:
+                        for segment in itinerary['segments']:
+                            airline = segment['carrierCode']
+                            flight_number = segment['number']
+                            departure = segment['departure']['iataCode']
+                            arrival = segment['arrival']['iataCode']
+                            departure_time = segment['departure']['at']
+                            st.write(f"Flight {airline} {flight_number} from {departure} to {arrival} at {departure_time}")
+            else:
+                st.write("No flights found with the selected number of stopovers.")
         else:
             st.write("No flights found.")
 
 if __name__ == "__main__":
     main()
+
