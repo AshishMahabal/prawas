@@ -41,7 +41,7 @@ def search_flights(access_token, origin, destination, departure_date):
         'originLocationCode': origin,
         'destinationLocationCode': destination,
         'departureDate': departure_date,
-        'currencyCode': 'USD'
+        #'currencyCode': 'USD'
     }
     response = requests.get(flight_search_url, headers=headers, params=params)
     return response.json()
