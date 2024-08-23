@@ -61,12 +61,13 @@ def main():
         
         if flight_offers:
             for offer in flight_offers.get('data', []):
-                price = offer['price']['total']
-                itinerary = offer['itineraries'][0]
-                flight_info = f"Flight from {itinerary['segments'][0]['departure']['iataCode']} to {itinerary['segments'][0]['arrival']['iataCode']} costs {price} USD."
-                st.write(flight_info)
+                st.write("Flight found!")
+                # Display flight details
+            if not flight_offers.get('data'):
+                st.write("No flights found.")
         else:
-            st.write("No flights found.")
+            st.write("No flights found or an error occurred.")
+
 
 if __name__ == "__main__":
     main()
