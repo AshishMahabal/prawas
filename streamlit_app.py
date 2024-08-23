@@ -1,35 +1,21 @@
-import streamlit as st
-# import pandas as pd
-# import math
-# from pathlib import Path
-# import configparser
-# import requests
 from amadeus import Client, ResponseError
-
-# Set the title and favicon that appear in the Browser's tab bar.
-st.set_page_config(
-    page_title='करु या थोडा प्रवास',
-    #page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
-)
-
-# Load your API keys from config or environment variables
-api_key = st.secrets["amadeus"]["api_key"]
-api_secret = st.secrets["amadeus"]["api_secret"]
+import streamlit as st
 
 # Initialize the Amadeus client
 amadeus = Client(
-    client_id=api_key,
-    client_secret=api_secret
+    client_id=st.secrets["amadeus"]["api_key"],
+    client_secret=st.secrets["amadeus"]["api_secret"]
 )
 
-# Example function to search for flights
-def search_flights(origin, destination, departure_date):
+# Search for flights with a limit on max stops
+def search_flights(origin, destination, departure_date, max_stops=1):
     try:
         response = amadeus.shopping.flight_offers_search.get(
             originLocationCode=origin,
             destinationLocationCode=destination,
             departureDate=departure_date,
-            adults=1
+            adults=1,
+            max=1 if max_stops is None else max_stops
         )
         return response.data
     except ResponseError as error:
@@ -43,14 +29,22 @@ def main():
     origin = st.text_input("Origin", "LAX")
     destination = st.text_input("Destination", "JFK")
     departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
+    
+    # Dropdown for max stops
+    max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
 
     if st.button("Search Flights"):
-        flights = search_flights(origin, destination, departure_date)
+        flights = search_flights(origin, destination, departure_date, max_stops)
         if flights:
             for flight in flights:
-                st.write(f"Flight from {flight['itineraries'][0]['segments'][0]['departure']['iataCode']} "
-                         f"to {flight['itineraries'][0]['segments'][0]['arrival']['iataCode']} "
-                         f"at {flight['itineraries'][0]['segments'][0]['departure']['at']}")
+                price = flight['price']['total']
+                st.write(f"Total Price: {price} {flight['price']['currency']}")
+                
+                for itinerary in flight['itineraries']:
+                    for segment in itinerary['segments']:
+                        st.write(f"Flight from {segment['departure']['iataCode']} "
+                                 f"to {segment['arrival']['iataCode']} "
+                                 f"at {segment['departure']['at']}")
         else:
             st.write("No flights found.")
 
