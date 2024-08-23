@@ -29,6 +29,8 @@ def get_access_token(api_key, api_secret):
         'client_secret': api_secret
     }
     response = requests.post(auth_url, data=auth_data)
+    st.write(response.status_code)  # Print the status code to see if the request was successful
+    st.write(response.json())  # Print the raw response for debugging
     return response.json().get('access_token')
 
 # Search for flights
