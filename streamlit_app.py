@@ -19,7 +19,7 @@ def main():
             destination = st.text_input("गंतव्य स्थान", "JFK").upper()
             departure_date = st.date_input("प्रस्थान तारीख").strftime("%Y-%m-%d")
             max_stops = st.selectbox("कमाल थांबे", [0, 1, 2], index=1)
-            currency = st.text_input("चलन कोड", "USD")
+            currency = st.text_input("चलन को���", "USD")
             search_button = st.button("विमाने शोधा")
         elif search_type == "विमानतळ":
             try:
@@ -34,7 +34,7 @@ def main():
             except Exception as e:
                 st.error(f"देशांची यादी मिळवताना त्रुटी आली: {str(e)}")
         elif search_type == "काहीही करू नका":
-            st.info("हा पर्याय भविष्यातील वैशिष्ट्यांसाठी प्लेसहोल्डर आहे.")
+            st.info("हा पर्याय भविष्यातील वैशिष्ट्यांसाठी प्लेसहोल्���र आहे.")
     
     # Display the selected currency in the main area
     if search_type == "विमान शोध":
@@ -58,7 +58,7 @@ def main():
                 st.warning("कोणतीही विमाने सापडली नाहीत.")
         except Exception as e:
             st.error(str(e))
-    elif search_type == "विमानतळ" and show_airports_button:
+    elif search_type == "विमानत��" and 'show_airports_button' in locals() and show_airports_button:
         try:
             airports_df = flight_search.get_airports_by_country(country_code, intl_flights_only == "होय")
             st.dataframe(airports_df)
