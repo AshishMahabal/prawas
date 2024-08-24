@@ -14,10 +14,11 @@ class FlightSearch:
     def get_countries(self):
         try:
             response = self.amadeus.reference_data.locations.countries.get()
-            countries = response.data
-            return [(country['name'], country['code']) for country in countries]
+            countries = [(country['name'], country['iataCode']) for country in response.data]
+            return sorted(countries, key=lambda x: x[0])
         except ResponseError as error:
-            raise Exception(f"Error retrieving countries: {error}")
+            print(f"An error occurred: {error}")
+            return []
 
     def get_airports_by_country(self, country_code, intl_flights_only):
         try:
