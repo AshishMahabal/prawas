@@ -4,4 +4,3 @@ requests
 datetime
 configparser
 amadeus
-st_aggrid
