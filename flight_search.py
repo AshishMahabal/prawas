@@ -45,7 +45,7 @@ class FlightSearch:
         # Format with zero-padding
         return f"{hours:02d}:{minutes:02d}"
     
-    def extract_flight_data(flights, max_stops):
+    def extract_flight_data(self,flights, max_stops):
         flight_data = []
         index = 1  # To keep track of the itinerary index
         
