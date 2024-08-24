@@ -11,7 +11,7 @@ class FlightSearch:
             client_secret=client_secret
         )
 
-    def get_airports_by_country(country, intl_flights_only):
+    def get_airports_by_country(self, country, intl_flights_only):
         # This function would query a dataset or API to retrieve airports by country.
         # For simplicity, we'll use a placeholder for airport data.
         
@@ -29,7 +29,7 @@ class FlightSearch:
         
         return pd.DataFrame(airports)
 
-    def is_international_airport(airport_code):
+    def is_international_airport(self, airport_code):
         # Placeholder function to determine if an airport is international
         # You would implement real logic or queries here
         international_airports = ["JFK", "LAX", "ORD"]  # Example list
