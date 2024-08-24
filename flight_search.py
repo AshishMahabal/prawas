@@ -11,29 +11,31 @@ class FlightSearch:
             client_secret=client_secret
         )
 
-    def get_airports_by_country(self, country, intl_flights_only):
-        # This function would query a dataset or API to retrieve airports by country.
-        # For simplicity, we'll use a placeholder for airport data.
-        
-        # Example placeholder data:
-        airports = [
-            {"Airport Code": "JFK", "City": "New York"},
-            {"Airport Code": "LAX", "City": "Los Angeles"},
-            {"Airport Code": "ORD", "City": "Chicago"},
-            # Add more entries or query a real dataset...
-        ]
-        
-        # Filter based on international flights if required
-        if intl_flights_only == "Yes":
-            airports = [airport for airport in airports if is_international_airport(airport['Airport Code'])]  # Placeholder for filter logic
-        
-        return pd.DataFrame(airports)
+    def get_countries(self):
+        try:
+            response = self.amadeus.reference_data.locations.countries.get()
+            countries = response.data
+            return [(country['name'], country['code']) for country in countries]
+        except ResponseError as error:
+            raise Exception(f"Error retrieving countries: {error}")
 
-    def is_international_airport(self, airport_code):
-        # Placeholder function to determine if an airport is international
-        # You would implement real logic or queries here
-        international_airports = ["JFK", "LAX", "ORD"]  # Example list
-        return airport_code in international_airports
+    def get_airports_by_country(self, country_code, intl_flights_only):
+        try:
+            response = self.amadeus.reference_data.locations.get(
+                keyword=country_code,
+                subType='AIRPORT'
+            )
+            airports = response.data
+
+            if intl_flights_only:
+                airports = [airport for airport in airports if airport.get('analytics', {}).get('flights', {}).get('score')]
+
+            return pd.DataFrame([{
+                "Airport Code": airport['iataCode'],
+                "City": airport['address']['cityName']
+            } for airport in airports])
+        except ResponseError as error:
+            raise Exception(f"Error retrieving airports: {error}")
     
     def search_flights(self, origin, destination, departure_date, currency):
         """
