@@ -54,22 +54,23 @@ def extract_flight_data(flights, max_stops):
     return pd.DataFrame(flight_data)
 
 # Streamlit UI
+# Streamlit UI
 def main():
     st.title("Flight Search App")
-
-    origin = st.text_input("Origin", "LAX")
-    destination = st.text_input("Destination", "JFK")
-    departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
     
-    # Dropdown for max stops
-    max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
+    # Sidebar inputs
+    with st.sidebar:
+        origin = st.text_input("Origin", "LAX")
+        destination = st.text_input("Destination", "JFK")
+        departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
+        max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
 
     if st.button("Search Flights"):
         flights = search_flights(origin, destination, departure_date)
         if flights:
             flight_data = extract_flight_data(flights, max_stops)
             if not flight_data.empty:
-                # Display the table using st.dataframe
+                # Display the table in the main area
                 st.dataframe(flight_data.sort_values(by="Price"))
             else:
                 st.write("No flights found with the selected number of stopovers.")
