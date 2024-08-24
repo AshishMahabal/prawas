@@ -15,8 +15,8 @@ def main():
         search_type = st.selectbox("Select Search Type", ["Flight Search", "Do Nothing"])
         
         if search_type == "Flight Search":
-            origin = st.text_input("Origin", "LAX")
-            destination = st.text_input("Destination", "JFK")
+            origin = st.text_input("Origin", "LAX").upper()
+            destination = st.text_input("Destination", "JFK").upper()
             departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
             max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
             currency = st.text_input("Currency Code", "USD")
