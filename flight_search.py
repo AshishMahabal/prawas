@@ -45,11 +45,10 @@ class FlightSearch:
         # Format with zero-padding
         return f"{hours:02d}:{minutes:02d}"
     
-    def extract_flight_data(self, flights, max_stops):
-        """
-        Extracts relevant flight information from the API response and returns a pandas DataFrame.
-        """
+    def extract_flight_data(flights, max_stops):
         flight_data = []
+        index = 1  # To keep track of the itinerary index
+        
         for flight in flights:
             stopovers = len(flight['itineraries'][0]['segments']) - 1
             if stopovers <= max_stops:
@@ -58,7 +57,8 @@ class FlightSearch:
                 for itinerary in flight['itineraries']:
                     total_duration_str = itinerary['duration']  # e.g., 'PT20H5M'
                     total_duration = self.convert_duration(total_duration_str)
-                    for segment in itinerary['segments']:
+                    
+                    for i, segment in enumerate(itinerary['segments']):
                         airline = segment['carrierCode']
                         flight_number = segment['number']
                         departure = segment['departure']['iataCode']
@@ -66,14 +66,17 @@ class FlightSearch:
                         departure_time = segment['departure']['at']
                         arrival_time = segment['arrival']['at']
                         
+                        # Add a row for each segment
                         flight_data.append({
+                            'Index': index if i == 0 else '',  # Only display index for the first segment
+                            'Price': price if i == 0 else '',  # Only display price for the first segment
                             'Airline': f"{airline} {flight_number}",
                             'Departure': departure,
                             'Arrival': arrival,
                             'Departure Time': departure_time,
                             'Arrival Time': arrival_time,
-                            'Duration': total_duration,
-                            'Price': price  # Numeric for sorting
+                            'Duration': total_duration if i == 0 else ''  # Only display total duration for the first segment
                         })
-        df = pd.DataFrame(flight_data)
-        return df
+                    index += 1  # Increment the index for the next itinerary
+        
+        return pd.DataFrame(flight_data)
