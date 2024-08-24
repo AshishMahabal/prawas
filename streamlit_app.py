@@ -61,26 +61,27 @@ def main():
     with st.sidebar:
         search_type = st.selectbox("Select Search Type", ["Flight Search", "Do Nothing"])
     
-    if search_type == "Flight Search":
-        # Flight search inputs
-        origin = st.text_input("Origin", "LAX")
-        destination = st.text_input("Destination", "JFK")
-        departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
-        max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
-
-        if st.button("Search Flights"):
-            flights = search_flights(origin, destination, departure_date)
-            if flights:
-                flight_data = extract_flight_data(flights, max_stops)
-                if not flight_data.empty:
-                    # Display the table in the main area
-                    st.dataframe(flight_data.sort_values(by="Price"))
-                else:
-                    st.write("No flights found with the selected number of stopovers.")
+        if search_type == "Flight Search":
+            origin = st.text_input("Origin", "LAX")
+            destination = st.text_input("Destination", "JFK")
+            departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
+            max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
+            search_button = st.button("Search Flights")
+        elif search_type == "Do Nothing":
+            st.write("Please select a search type from the dropdown menu.")
+    
+    # Display output in the main area
+    if search_type == "Flight Search" and search_button:
+        flights = search_flights(origin, destination, departure_date)
+        if flights:
+            flight_data = extract_flight_data(flights, max_stops)
+            if not flight_data.empty:
+                # Display the table in the main area
+                st.dataframe(flight_data.sort_values(by="Price"))
             else:
-                st.write("No flights found.")
-    elif search_type == "Do Nothing":
-        st.write("Please select a search type from the dropdown menu.")
+                st.write("No flights found with the selected number of stopovers.")
+        else:
+            st.write("No flights found.")
 
 if __name__ == "__main__":
     main()
