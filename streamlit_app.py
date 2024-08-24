@@ -22,7 +22,9 @@ def main():
             currency = st.text_input("Currency Code", "USD")
             search_button = st.button("Search Flights")
         elif search_type == "Airports":
-            country = st.selectbox("Select Country", ["USA", "Canada", "UK", "India", "Australia", ...])
+            countries = flight_search.get_countries()
+            country = st.selectbox("Select Country", [name for name, code in countries])
+            country_code = next(code for name, code in countries if name == country)
             intl_flights_only = st.radio("Include Only International Airports?", ("Yes", "No"))
             show_airports_button = st.button("Show Airports")
         elif search_type == "Do Nothing":
@@ -51,19 +53,15 @@ def main():
         except Exception as e:
             st.error(str(e))
     elif search_type == "Airports" and show_airports_button:
-        airport_data = get_airports_by_country(country, intl_flights_only)
+        airport_data = flight_search.get_airports_by_country(country_code, intl_flights_only == "Yes")
         
         if not airport_data.empty:
-            # Display the selected country and filter
             st.write(f"Airports in {country} ({'International' if intl_flights_only == 'Yes' else 'All'})")
-            
-            # Pagination and sorting
             page_size = st.selectbox("Entries per page", [10, 20, 50, 100, "All"], index=1)
             if page_size == "All":
                 st.dataframe(airport_data)
             else:
-                page_size = int(page_size)
-                st.dataframe(airport_data.head(page_size))  # Implement proper pagination logic here
+                st.dataframe(airport_data.head(int(page_size)))
         else:
             st.write(f"No airports found for {country} ({'International' if intl_flights_only == 'Yes' else 'All'}).")
     elif search_type == "Do Nothing":
