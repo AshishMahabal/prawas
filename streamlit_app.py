@@ -54,28 +54,33 @@ def extract_flight_data(flights, max_stops):
     return pd.DataFrame(flight_data)
 
 # Streamlit UI
-# Streamlit UI
 def main():
-    st.title("Flight Search App")
+    st.title("Travel Search App")
     
-    # Sidebar inputs
+    # Sidebar with search options
     with st.sidebar:
+        search_type = st.selectbox("Select Search Type", ["Flight Search", "Do Nothing"])
+    
+    if search_type == "Flight Search":
+        # Flight search inputs
         origin = st.text_input("Origin", "LAX")
         destination = st.text_input("Destination", "JFK")
         departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
         max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
 
-    if st.button("Search Flights"):
-        flights = search_flights(origin, destination, departure_date)
-        if flights:
-            flight_data = extract_flight_data(flights, max_stops)
-            if not flight_data.empty:
-                # Display the table in the main area
-                st.dataframe(flight_data.sort_values(by="Price"))
+        if st.button("Search Flights"):
+            flights = search_flights(origin, destination, departure_date)
+            if flights:
+                flight_data = extract_flight_data(flights, max_stops)
+                if not flight_data.empty:
+                    # Display the table in the main area
+                    st.dataframe(flight_data.sort_values(by="Price"))
+                else:
+                    st.write("No flights found with the selected number of stopovers.")
             else:
-                st.write("No flights found with the selected number of stopovers.")
-        else:
-            st.write("No flights found.")
+                st.write("No flights found.")
+    elif search_type == "Do Nothing":
+        st.write("Please select a search type from the dropdown menu.")
 
 if __name__ == "__main__":
     main()
