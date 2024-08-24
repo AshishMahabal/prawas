@@ -29,13 +29,18 @@ class FlightSearch:
             )
             airports = []
             for airport in response.data:
-                if not intl_flights_only or airport.get('internationalAirport', False):
+                is_international = airport.get('internationalAirport', False)
+                if not intl_flights_only or is_international:
                     airports.append({
                         "विमानतळ कोड": airport['iataCode'],
                         "नाव": airport['name'],
                         "शहर": airport['address'].get('cityName', 'N/A'),
-                        "आंतरराष्ट्रीय": "होय" if airport.get('internationalAirport', False) else "नाही"
+                        "आंतरराष्ट्रीय": "होय" if is_international else "नाही"
                     })
+            
+            if not airports:
+                print(f"कोणतेही विमानतळ सापडले नाही: {country_code}, आंतरराष्ट्रीय फक्त: {intl_flights_only}")
+            
             return pd.DataFrame(airports)
         except ResponseError as error:
             print(f"विमानतळांची माहिती मिळवताना त्रुटी आली: {error}")
