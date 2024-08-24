@@ -9,13 +9,14 @@ amadeus = Client(
 )
 
 # Search for flights
-def search_flights(origin, destination, departure_date):
+def search_flights(origin, destination, departure_date, currency):
     try:
         response = amadeus.shopping.flight_offers_search.get(
             originLocationCode=origin,
             destinationLocationCode=destination,
             departureDate=departure_date,
-            adults=1
+            adults=1,
+            currencyCode=currency
         )
         return response.data
     except ResponseError as error:
@@ -66,13 +67,14 @@ def main():
             destination = st.text_input("Destination", "JFK")
             departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
             max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
+            currency = st.text_input("Currency Code", "USD")
             search_button = st.button("Search Flights")
         elif search_type == "Do Nothing":
             st.write("Please select a search type from the dropdown menu.")
     
     # Display output in the main area
     if search_type == "Flight Search" and search_button:
-        flights = search_flights(origin, destination, departure_date)
+        flights = search_flights(origin, destination, departure_date, currency)
         if flights:
             flight_data = extract_flight_data(flights, max_stops)
             if not flight_data.empty:
