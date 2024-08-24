@@ -2,7 +2,7 @@ import streamlit as st
 from flight_search import FlightSearch
 
 def main():
-    st.title("Travel Search App")
+    st.title("थोडा प्रवास करू या")
     
     # Initialize the FlightSearch class with Amadeus credentials from secrets
     flight_search = FlightSearch(
