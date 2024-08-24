@@ -4,7 +4,7 @@ from amadeus import Client, ResponseError
 class FlightSearch:
     def __init__(self, client_id, client_secret):
         """
-        Initializes the Amadeus client with the provided credentials.
+        Amadeus क्लायंटला दिलेल्या क्रेडेन्शियल्ससह प्रारंभ करते.
         """
         self.amadeus = Client(
             client_id=client_id,
@@ -17,7 +17,7 @@ class FlightSearch:
             countries = [(country['name'], country['iataCode']) for country in response.data]
             return sorted(countries, key=lambda x: x[0])
         except ResponseError as error:
-            print(f"An error occurred: {error}")
+            print(f"त्रुटी आली: {error}")
             return []
 
     def get_airports_by_country(self, country_code, intl_flights_only):
@@ -32,15 +32,15 @@ class FlightSearch:
                 airports = [airport for airport in airports if airport.get('analytics', {}).get('flights', {}).get('score')]
 
             return pd.DataFrame([{
-                "Airport Code": airport['iataCode'],
-                "City": airport['address']['cityName']
+                "विमानतळ कोड": airport['iataCode'],
+                "शहर": airport['address']['cityName']
             } for airport in airports])
         except ResponseError as error:
-            raise Exception(f"Error retrieving airports: {error}")
+            raise Exception(f"विमानतळ मिळवताना त्रुटी आली: {error}")
     
     def search_flights(self, origin, destination, departure_date, currency):
         """
-        Searches for flights using the Amadeus API based on the provided parameters.
+        दिलेल्या मापदंडांच्या आधारे Amadeus API वापरून विमाने शोधते.
         """
         try:
             response = self.amadeus.shopping.flight_offers_search.get(
@@ -52,16 +52,15 @@ class FlightSearch:
             )
             return response.data
         except ResponseError as error:
-            raise Exception(f"Error searching flights: {error}")
+            raise Exception(f"विमाने शोधताना त्रुटी आली: {error}")
     
     def convert_duration(self, duration_str):
         """
-        Converts duration from ISO 8601 format to "XX:YY" string format.
+        कालावधीला ISO 8601 स्वरूपातून "XX:YY" स्ट्रिंग स्वरूपात रूपांतरित करते.
         """
         hours = 0
         minutes = 0
-        # Remove the 'PT' prefix
-        duration = duration_str[2:]
+        duration = duration_str[2:]  # 'PT' उपसर्ग काढून टाकतो
         if 'H' in duration:
             hours_part, _, minutes_part = duration.partition('H')
             hours = int(hours_part)
@@ -69,38 +68,34 @@ class FlightSearch:
                 minutes = int(minutes_part.replace('M', ''))
         elif 'M' in duration:
             minutes = int(duration.replace('M', ''))
-        # Format with zero-padding
         return f"{hours:02d}:{minutes:02d}"
     
     def calculate_halt_duration(self, arrival_time, departure_time):
         """
-        Calculate the halt duration between two segments.
+        दोन सेगमेंट्समधील थांबण्याचा कालावधी गणना करते.
         """
         arrival_dt = pd.to_datetime(arrival_time)
         departure_dt = pd.to_datetime(departure_time)
         halt_duration = departure_dt - arrival_dt
-        # Format halt duration as "HH:MM"
         return f"{halt_duration.components.hours:02}:{halt_duration.components.minutes:02}"
     
     def extract_flight_data(self, flights, max_stops):
         """
-        Extracts relevant flight information from the API response and returns a pandas DataFrame.
+        API प्रतिसादातून संबंधित विमान माहिती काढते आणि pandas DataFrame परत करते.
         """
         flight_data = []
-        index = 1  # To keep track of the itinerary index
+        index = 1
         
         for flight in flights:
             stopovers = len(flight['itineraries'][0]['segments']) - 1
             if stopovers <= max_stops:
-                price = float(flight['price']['total'])  # Numeric value for sorting
+                price = float(flight['price']['total'])
                 currency = flight['price']['currency']
                 
                 for itinerary in flight['itineraries']:
                     segments = itinerary['segments']
-                    total_duration_str = itinerary['duration']  # e.g., 'PT20H5M'
-                    total_duration = self.convert_duration(total_duration_str)
+                    total_duration = self.convert_duration(itinerary['duration'])
                     
-                    # Initialize lists and variables
                     airlines = []
                     connecting_cities = []
                     halt_durations = []
@@ -110,37 +105,33 @@ class FlightSearch:
                         flight_number = segment['number']
                         airlines.append(f"{airline} {flight_number}")
                         
-                        if i > 0:  # Not the first segment
+                        if i > 0:
                             previous_arrival_time = segments[i-1]['arrival']['at']
                             current_departure_time = segment['departure']['at']
                             
-                            # Calculate halt duration
                             halt_duration = self.calculate_halt_duration(previous_arrival_time, current_departure_time)
                             halt_durations.append(halt_duration)
                             
-                            # Add the connecting city
                             connecting_cities.append(segment['departure']['iataCode'])
                     
-                    # Get departure and arrival details
                     departure = segments[0]['departure']['iataCode']
                     departure_time = segments[0]['departure']['at']
                     arrival = segments[-1]['arrival']['iataCode']
                     arrival_time = segments[-1]['arrival']['at']
                     
-                    # Create a row for the itinerary
                     flight_data.append({
-                        'Index': index,
-                        'Price': price,
-                        'Airlines': ', '.join(airlines),
-                        'Departure': departure,
-                        'Arrival': arrival,
-                        'Departure Time': departure_time,
-                        'Arrival Time': arrival_time,
-                        'Duration': total_duration,
-                        'Connecting Cities': ', '.join(connecting_cities) if connecting_cities else '',
-                        'Halts': ', '.join(halt_durations) if halt_durations else ''
+                        'क्रमांक': index,
+                        'किंमत': price,
+                        'विमान कंपन्या': ', '.join(airlines),
+                        'प्रस्थान': departure,
+                        'आगमन': arrival,
+                        'प्रस्थान वेळ': departure_time,
+                        'आगमन वेळ': arrival_time,
+                        'कालावधी': total_duration,
+                        'जोडणारी शहरे': ', '.join(connecting_cities) if connecting_cities else '',
+                        'थांबे': ', '.join(halt_durations) if halt_durations else ''
                     })
                     
-                    index += 1  # Increment the index for the next itinerary
+                    index += 1
         
         return pd.DataFrame(flight_data)

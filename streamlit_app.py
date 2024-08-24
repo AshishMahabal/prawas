@@ -12,16 +12,16 @@ def main():
     
     # Sidebar for search options
     with st.sidebar:
-        search_type = st.selectbox("Select Search Type", ["Flight Search", "Airports", "Do Nothing"])
+        search_type = st.selectbox("शोध प्रकार निवडा", ["विमान शोध", "विमानतळ", "काहीही करू नका"])
         
-        if search_type == "Flight Search":
-            origin = st.text_input("Origin", "LAX").upper()
-            destination = st.text_input("Destination", "JFK").upper()
-            departure_date = st.date_input("Departure Date").strftime("%Y-%m-%d")
-            max_stops = st.selectbox("Max Stops", [0, 1, 2], index=1)
-            currency = st.text_input("Currency Code", "USD")
-            search_button = st.button("Search Flights")
-        elif search_type == "Airports":
+        if search_type == "विमान शोध":
+            origin = st.text_input("प्रारंभ स्थान", "LAX").upper()
+            destination = st.text_input("गंतव्य स्थान", "JFK").upper()
+            departure_date = st.date_input("प्रस्थान तारीख").strftime("%Y-%m-%d")
+            max_stops = st.selectbox("कमाल थांबे", [0, 1, 2], index=1)
+            currency = st.text_input("चलन कोड", "USD")
+            search_button = st.button("विमाने शोधा")
+        elif search_type == "विमानतळ":
             try:
                 countries = flight_search.get_countries()
                 if not countries:
@@ -33,15 +33,15 @@ def main():
                     show_airports_button = st.button("विमानतळ दाखवा")
             except Exception as e:
                 st.error(f"देशांची यादी मिळवताना त्रुटी आली: {str(e)}")
-        elif search_type == "Do Nothing":
-            st.info("This option is currently a placeholder for future features.")
+        elif search_type == "काहीही करू नका":
+            st.info("हा पर्याय भविष्यातील वैशिष्ट्यांसाठी प्लेसहोल्डर आहे.")
     
     # Display the selected currency in the main area
-    if search_type == "Flight Search":
-        st.write(f"Displaying prices in: {currency}")
+    if search_type == "विमान शोध":
+        st.write(f"किंमती दर्शवत आहे: {currency}")
     
     # Handle flight search and display results
-    if search_type == "Flight Search" and search_button:
+    if search_type == "विमान शोध" and search_button:
         try:
             flights = flight_search.search_flights(origin, destination, departure_date, currency)
             if flights:
@@ -49,29 +49,23 @@ def main():
                 if not flight_data.empty:
                     # Display the DataFrame with proper sorting
                     st.dataframe(
-                        flight_data.sort_values(by=["Price", "Duration"], ascending=[True, True]),
+                        flight_data.sort_values(by=["किंमत", "कालावधी"], ascending=[True, True]),
                         use_container_width=True
                     )
                 else:
-                    st.warning("No flights found with the selected number of stopovers.")
+                    st.warning("निवडलेल्या थांब्यांच्या संख्येसह कोणतीही विमाने सापडली नाहीत.")
             else:
-                st.warning("No flights found.")
+                st.warning("कोणतीही विमाने सापडली नाहीत.")
         except Exception as e:
             st.error(str(e))
-    elif search_type == "Airports" and show_airports_button:
-        airport_data = flight_search.get_airports_by_country(country_code, intl_flights_only == "Yes")
-        
-        if not airport_data.empty:
-            st.write(f"Airports in {country} ({'International' if intl_flights_only == 'Yes' else 'All'})")
-            page_size = st.selectbox("Entries per page", [10, 20, 50, 100, "All"], index=1)
-            if page_size == "All":
-                st.dataframe(airport_data)
-            else:
-                st.dataframe(airport_data.head(int(page_size)))
-        else:
-            st.write(f"No airports found for {country} ({'International' if intl_flights_only == 'Yes' else 'All'}).")
-    elif search_type == "Do Nothing":
-            st.info("Please select a search type from the dropdown menu.")
+    elif search_type == "विमानतळ" and show_airports_button:
+        try:
+            airports_df = flight_search.get_airports_by_country(country_code, intl_flights_only == "होय")
+            st.dataframe(airports_df)
+        except Exception as e:
+            st.error(f"विमानतळांची माहिती मिळवताना त्रुटी आली: {str(e)}")
+    elif search_type == "काहीही करू नका":
+        st.info("कृपया ड्रॉपडाउन मेनूमधून शोध प्रकार निवडा.")
 
 if __name__ == "__main__":
     main()
