@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
 from amadeus import Client, ResponseError
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Initialize the Amadeus client
 amadeus = Client(
@@ -70,14 +69,8 @@ def main():
         if flights:
             flight_data = extract_flight_data(flights, max_stops)
             if not flight_data.empty:
-                # Create a table with sorting capability
-                gb = GridOptionsBuilder.from_dataframe(flight_data)
-                gb.configure_default_column(sortable=True)
-                gb.configure_column("Price", sort="asc")  # Set default sorting by Price
-                gridOptions = gb.build()
-                
-                # Display the table
-                AgGrid(flight_data, gridOptions=gridOptions, theme='light')
+                # Display the table using st.dataframe
+                st.dataframe(flight_data.sort_values(by="Price"))
             else:
                 st.write("No flights found with the selected number of stopovers.")
         else:
