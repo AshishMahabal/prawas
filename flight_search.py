@@ -24,7 +24,7 @@ class FlightSearch:
         try:
             response = self.amadeus.reference_data.locations.get(
                 keyword=country_code,
-                subType=amadeus.location.AIRPORT,
+                subType='AIRPORT',
                 page={'limit': 100}  # जास्तीत जास्त 100 विमानतळ मिळवा
             )
             airports = []
