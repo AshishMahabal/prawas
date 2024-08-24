@@ -22,11 +22,17 @@ def main():
             currency = st.text_input("Currency Code", "USD")
             search_button = st.button("Search Flights")
         elif search_type == "Airports":
-            countries = flight_search.get_countries()
-            country = st.selectbox("Select Country", [name for name, code in countries])
-            country_code = next(code for name, code in countries if name == country)
-            intl_flights_only = st.radio("Include Only International Airports?", ("Yes", "No"))
-            show_airports_button = st.button("Show Airports")
+            try:
+                countries = flight_search.get_countries()
+                if not countries:
+                    st.error("देशांची यादी मिळवण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा.")
+                else:
+                    country = st.selectbox("देश निवडा", [name for name, code in countries])
+                    country_code = next(code for name, code in countries if name == country)
+                    intl_flights_only = st.radio("केवळ आंतरराष्ट्रीय विमानतळ समाविष्ट करायचे?", ("होय", "नाही"))
+                    show_airports_button = st.button("विमानतळ दाखवा")
+            except Exception as e:
+                st.error(f"देशांची यादी मिळवताना त्रुटी आली: {str(e)}")
         elif search_type == "Do Nothing":
             st.info("This option is currently a placeholder for future features.")
     
