@@ -143,3 +143,11 @@ class FlightSearch:
                     index += 1
         
         return pd.DataFrame(flight_data)
+
+    def search_return_flights(self, origin, destination, departure_date, return_date, currency):
+        # परतीच्या प्रवासासाठी API कॉल करा
+        pass
+
+    def search_multi_city_flights(self, cities, dates, currency):
+        # बहु-शहर प्रवासासाठी API कॉल करा
+        pass

@@ -15,12 +15,24 @@ def main():
         search_type = st.selectbox("शोध प्रकार निवडा", ["विमान शोध", "विमानतळ", "काहीही करू नका"])
         
         if search_type == "विमान शोध":
+            trip_type = st.radio("प्रवास प्रकार", ["एक-मार्गी", "परतीचा", "बहु-शहर"])
+            
             origin = st.text_input("प्रारंभ स्थान", "LAX").upper()
             destination = st.text_input("गंतव्य स्थान", "JFK").upper()
-            departure_date = st.date_input("प्रस्थान तारीख").strftime("%Y-%m-%d")
+            departure_date = st.date_input("प्रस्थान तारीख")
+            
+            if trip_type == "परतीचा":
+                return_date = st.date_input("परतीची तारीख")
+            elif trip_type == "बहु-शहर":
+                num_cities = st.number_input("शहरांची संख्या", min_value=2, max_value=5, value=2)
+                additional_cities = []
+                for i in range(num_cities - 1):
+                    additional_cities.append(st.text_input(f"अतिरिक्त शहर {i+1}", f"CITY{i+1}").upper())
+            
             max_stops = st.selectbox("कमाल थांबे", [0, 1, 2], index=1)
-            currency = st.text_input("चलन को", "USD")
+            currency = st.text_input("चलन", "USD")
             search_button = st.button("विमाने शोधा")
+        
         elif search_type == "विमानतळ":
             country_selection_method = st.radio(
                 "देश निवडण्याची पद्धत",
@@ -51,7 +63,15 @@ def main():
     # Handle flight search and display results
     if search_type == "विमान शोध" and search_button:
         try:
-            flights = flight_search.search_flights(origin, destination, departure_date, currency)
+            if trip_type == "एक-मार्गी":
+                flights = flight_search.search_flights(origin, destination, departure_date.strftime("%Y-%m-%d"), currency)
+            elif trip_type == "परतीचा":
+                st.warning("परतीच्या प्रवासाची सुविधा अद्याप उपलब्ध नाही.")
+                flights = []  # प्लेसहोल्डर
+            elif trip_type == "बहु-शहर":
+                st.warning("बहु-शहर प्रवासाची सुविधा अद्याप उपलब्ध नाही.")
+                flights = []  # प्लेसहोल्डर
+            
             if flights:
                 flight_data = flight_search.extract_flight_data(flights, max_stops)
                 if not flight_data.empty:
