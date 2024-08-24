@@ -45,7 +45,20 @@ class FlightSearch:
         # Format with zero-padding
         return f"{hours:02d}:{minutes:02d}"
     
-    def extract_flight_data(self,flights, max_stops):
+    def calculate_halt_duration(self, arrival_time, departure_time):
+        """
+        Calculate the halt duration between two segments.
+        """
+        arrival_dt = pd.to_datetime(arrival_time)
+        departure_dt = pd.to_datetime(departure_time)
+        halt_duration = departure_dt - arrival_dt
+        # Format halt duration as "HH:MM"
+        return f"{halt_duration.components.hours:02}:{halt_duration.components.minutes:02}"
+    
+    def extract_flight_data(self, flights, max_stops):
+        """
+        Extracts relevant flight information from the API response and returns a pandas DataFrame.
+        """
         flight_data = []
         index = 1  # To keep track of the itinerary index
         
@@ -54,29 +67,53 @@ class FlightSearch:
             if stopovers <= max_stops:
                 price = float(flight['price']['total'])  # Numeric value for sorting
                 currency = flight['price']['currency']
+                
                 for itinerary in flight['itineraries']:
+                    segments = itinerary['segments']
                     total_duration_str = itinerary['duration']  # e.g., 'PT20H5M'
                     total_duration = self.convert_duration(total_duration_str)
                     
-                    for i, segment in enumerate(itinerary['segments']):
+                    # Initialize lists and variables
+                    airlines = []
+                    connecting_cities = []
+                    halt_durations = []
+                    
+                    for i, segment in enumerate(segments):
                         airline = segment['carrierCode']
                         flight_number = segment['number']
-                        departure = segment['departure']['iataCode']
-                        arrival = segment['arrival']['iataCode']
-                        departure_time = segment['departure']['at']
-                        arrival_time = segment['arrival']['at']
+                        airlines.append(f"{airline} {flight_number}")
                         
-                        # Add a row for each segment
-                        flight_data.append({
-                            'Index': index if i == 0 else '',  # Only display index for the first segment
-                            'Price': price if i == 0 else '',  # Only display price for the first segment
-                            'Airline': f"{airline} {flight_number}",
-                            'Departure': departure,
-                            'Arrival': arrival,
-                            'Departure Time': departure_time,
-                            'Arrival Time': arrival_time,
-                            'Duration': total_duration if i == 0 else ''  # Only display total duration for the first segment
-                        })
+                        if i > 0:  # Not the first segment
+                            previous_arrival_time = segments[i-1]['arrival']['at']
+                            current_departure_time = segment['departure']['at']
+                            
+                            # Calculate halt duration
+                            halt_duration = self.calculate_halt_duration(previous_arrival_time, current_departure_time)
+                            halt_durations.append(halt_duration)
+                            
+                            # Add the connecting city
+                            connecting_cities.append(segment['departure']['iataCode'])
+                    
+                    # Get departure and arrival details
+                    departure = segments[0]['departure']['iataCode']
+                    departure_time = segments[0]['departure']['at']
+                    arrival = segments[-1]['arrival']['iataCode']
+                    arrival_time = segments[-1]['arrival']['at']
+                    
+                    # Create a row for the itinerary
+                    flight_data.append({
+                        'Index': index,
+                        'Price': price,
+                        'Airlines': ', '.join(airlines),
+                        'Departure': departure,
+                        'Arrival': arrival,
+                        'Departure Time': departure_time,
+                        'Arrival Time': arrival_time,
+                        'Duration': total_duration,
+                        'Connecting Cities': ', '.join(connecting_cities) if connecting_cities else '',
+                        'Halts': ', '.join(halt_durations) if halt_durations else ''
+                    })
+                    
                     index += 1  # Increment the index for the next itinerary
         
         return pd.DataFrame(flight_data)
