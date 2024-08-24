@@ -66,7 +66,7 @@ def main():
                 st.warning("कोणतीही विमाने सापडली नाहीत.")
         except Exception as e:
             st.error(str(e))
-    elif search_type == "वि���ानतळ" and show_airports_button:
+    elif search_type == "विमानतळ" and show_airports_button:
         if country_code:
             try:
                 airports_df = flight_search.get_airports_by_country(country_code, intl_flights_only == "होय")

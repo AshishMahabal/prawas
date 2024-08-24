@@ -17,26 +17,29 @@ class FlightSearch:
             countries = [(country['name'], country['iataCode']) for country in response.data]
             return sorted(countries, key=lambda x: x[0])
         except ResponseError as error:
-            print(f"त्रुटी आली: {error}")
+            print(f"देशांची यादी मिळवताना त्रुटी आली: {error}")
             return []
 
-    def get_airports_by_country(self, country_code, intl_flights_only):
+    def get_airports_by_country(self, country_code, intl_flights_only=False):
         try:
             response = self.amadeus.reference_data.locations.get(
                 keyword=country_code,
-                subType='AIRPORT'
+                subType=amadeus.location.AIRPORT,
+                page={'limit': 100}  # जास्तीत जास्त 100 विमानतळ मिळवा
             )
-            airports = response.data
-
-            if intl_flights_only:
-                airports = [airport for airport in airports if airport.get('analytics', {}).get('flights', {}).get('score')]
-
-            return pd.DataFrame([{
-                "विमानतळ कोड": airport['iataCode'],
-                "शहर": airport['address']['cityName']
-            } for airport in airports])
+            airports = []
+            for airport in response.data:
+                if not intl_flights_only or airport.get('internationalAirport', False):
+                    airports.append({
+                        "विमानतळ कोड": airport['iataCode'],
+                        "नाव": airport['name'],
+                        "शहर": airport['address'].get('cityName', 'N/A'),
+                        "आंतरराष्ट्रीय": "होय" if airport.get('internationalAirport', False) else "नाही"
+                    })
+            return pd.DataFrame(airports)
         except ResponseError as error:
-            raise Exception(f"विमानतळ मिळवताना त्रुटी आली: {error}")
+            print(f"विमानतळांची माहिती मिळवताना त्रुटी आली: {error}")
+            return pd.DataFrame()
     
     def search_flights(self, origin, destination, departure_date, currency):
         """
