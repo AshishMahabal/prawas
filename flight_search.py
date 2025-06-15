@@ -45,15 +45,18 @@ class FlightSearch:
         airports = []
         for _, row in df.iterrows():
             airports.append({
+                "शहर": row['municipality'] if pd.notnull(row['municipality']) else '',
                 "विमानतळ कोड": row['iata_code'] if pd.notnull(row['iata_code']) else '',
                 "नाव": row['name'],
-                "शहर": row['municipality'] if pd.notnull(row['municipality']) else '',
-                # No reliable "international" flag in this dataset
+                "अक्षांश": row['latitude_deg'],
+                "रेखांश": row['longitude_deg'],
             })
 
-        if not airports:
-            print(f"कोणतेही विमानतळ सापडले नाही: {country_code}")
-        return pd.DataFrame(airports)
+        airports_df = pd.DataFrame(airports)
+        # Order by municipality name
+        airports_df = airports_df.sort_values(by="शहर")
+
+        return airports_df
 
     
     def search_flights(self, origin, destination, departure_date, currency):
