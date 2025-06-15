@@ -40,7 +40,7 @@ class FlightSearch:
 
         # Filter out unscheduled unless requested
         if not include_unscheduled:
-            df = df[df['type'] != 'scheduled_service']
+            df = df[df['scheduled_service'] != 'no']
 
         airports = []
         for _, row in df.iterrows():
