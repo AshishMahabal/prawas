@@ -20,7 +20,7 @@ class FlightSearch:
             print(f"देशांची यादी मिळवताना त्रुटी आली: {error}")
             return []
 
-    def get_airports_by_country(self, country_code, include_heliports=False):
+    def get_airports_by_country(self, country_code, include_heliports=False, include_unscheduled=False):
         """
         Fetches airports for a given country code from the OurAirports CSV.
         Filters out heliports by default.
@@ -37,6 +37,10 @@ class FlightSearch:
         # Filter out heliports unless requested
         if not include_heliports:
             df = df[df['type'] != 'heliport']
+
+        # Filter out unscheduled unless requested
+        if not include_unscheduled:
+            df = df[df['type'] != 'scheduled_service']
 
         airports = []
         for _, row in df.iterrows():
