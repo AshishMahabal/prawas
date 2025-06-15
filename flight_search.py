@@ -20,36 +20,36 @@ class FlightSearch:
             print(f"देशांची यादी मिळवताना त्रुटी आली: {error}")
             return []
 
-    def get_airports_by_country(self, country_code, intl_flights_only=False):
-        try:
-            # Use countryCode here rather than keyword
-            response = self.amadeus.reference_data.locations.get(
-                subType='AIRPORT',
-                countryCode=country_code,
-                page={'limit': 1000}
-            )
+    def get_airports_by_country(self, country_code, include_heliports=False):
+        """
+        Fetches airports for a given country code from the OurAirports CSV.
+        Filters out heliports by default.
+        """
+        csv_url = "https://davidmegginson.github.io/ourairports-data/airports.csv"
+        if not hasattr(self, "_airports_df"):
+            self._airports_df = pd.read_csv(csv_url, low_memory=False)
 
-            airports = []
-            for loc in response.data:
-                # just in case, ensure it's really an airport
-                if loc.get('subType') != 'AIRPORT':
-                    continue
+        df = self._airports_df
 
-                airports.append({
-                    "विमानतळ कोड": loc.get('iataCode', ''),
-                    "नाव":           loc.get('name', ''),
-                    "शहर":          loc.get('address', {}).get('cityName', 'N/A'),
-                    # we no longer have a reliable 'international' flag
-                    "आंतरराष्ट्रीय": "नाही"
-                })
+        # Filter by country code
+        df = df[df['iso_country'] == country_code]
 
-            if not airports:
-                print(f"कोणतेही विमानतळ सापडले नाही: {country_code}")
-            return pd.DataFrame(airports)
+        # Filter out heliports unless requested
+        if not include_heliports:
+            df = df[df['type'] != 'heliport']
 
-        except ResponseError as error:
-            print(f"विमानतळांची माहिती मिळवताना त्रुटी आली: {error}")
-            return pd.DataFrame()
+        airports = []
+        for _, row in df.iterrows():
+            airports.append({
+                "विमानतळ कोड": row['iata_code'] if pd.notnull(row['iata_code']) else '',
+                "नाव": row['name'],
+                "शहर": row['municipality'] if pd.notnull(row['municipality']) else '',
+                # No reliable "international" flag in this dataset
+            })
+
+        if not airports:
+            print(f"कोणतेही विमानतळ सापडले नाही: {country_code}")
+        return pd.DataFrame(airports)
 
     
     def search_flights(self, origin, destination, departure_date, currency):
