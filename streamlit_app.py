@@ -109,6 +109,10 @@ def main():
                 airports_df = flight_search.get_airports_by_country(country_code, intl_flights_only)
                 if not airports_df.empty:
                     st.dataframe(airports_df)
+                    # Show map if lat/lon columns exist and are not empty
+                    map_df = airports_df[["अक्षांश", "रेखांश"]].dropna()
+                    if not map_df.empty:
+                        st.map(map_df.rename(columns={"अक्षांश": "lat", "रेखांश": "lon"}))
                 else:
                     st.warning(f"निवडलेल्या देशासाठी कोणतेही विमानतळ सापडले नाही.")
             except Exception as e:
