@@ -68,7 +68,7 @@ def main():
                 country_name = st.text_input("देशाचे नाव प्रविष्ट करा")
                 country_code = country_name[:2].upper() if country_name else ""
 
-            #intl_flights_only = st.checkbox("केवळ आंतरराष्ट्रीय विमानतळ दाखवा")
+            #intl_flights_only = st.checkbox("फक्त आंतरराष्ट्रीय विमानतळ दाखवा")
             show_airports_button = st.button("विमानतळ दाखवा")
         elif search_type == "काहीही करू नका":
             st.info("हा पर्याय भविष्यातील वैशिष्ट्यांसाठी प्लेसहोल्र आहे.")
