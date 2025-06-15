@@ -22,32 +22,35 @@ class FlightSearch:
 
     def get_airports_by_country(self, country_code, intl_flights_only=False):
         try:
+            # Use countryCode here rather than keyword
             response = self.amadeus.reference_data.locations.get(
-                keyword=country_code,
                 subType='AIRPORT',
-                page={'limit': 100}  # जास्तीत जास्त 100 विमानतळ मिळवा
+                countryCode=country_code,
+                page={'limit': 1000}
             )
+
             airports = []
-            for airport in response.data:
-                # Only consider results that exactly match our country_code
-                if airport.get('address', {}).get('countryCode') != country_code:
+            for loc in response.data:
+                # just in case, ensure it's really an airport
+                if loc.get('subType') != 'AIRPORT':
                     continue
-                is_international = airport.get('internationalAirport', False)
-                if not intl_flights_only or is_international:
-                    airports.append({
-                        "विमानतळ कोड": airport['iataCode'],
-                        "नाव": airport['name'],
-                        "शहर": airport['address'].get('cityName', 'N/A'),
-                        "आंतरराष्ट्रीय": "होय" if is_international else "नाही"
-                    })
+
+                airports.append({
+                    "विमानतळ कोड": loc.get('iataCode', ''),
+                    "नाव":           loc.get('name', ''),
+                    "शहर":          loc.get('address', {}).get('cityName', 'N/A'),
+                    # we no longer have a reliable 'international' flag
+                    "आंतरराष्ट्रीय": "नाही"
+                })
 
             if not airports:
-                print(f"कोणतेही विमानतळ सापडले नाही: {country_code}, आंतरराष्ट्रीय फक्त: {intl_flights_only}")
-
+                print(f"कोणतेही विमानतळ सापडले नाही: {country_code}")
             return pd.DataFrame(airports)
+
         except ResponseError as error:
             print(f"विमानतळांची माहिती मिळवताना त्रुटी आली: {error}")
             return pd.DataFrame()
+
     
     def search_flights(self, origin, destination, departure_date, currency):
         """
