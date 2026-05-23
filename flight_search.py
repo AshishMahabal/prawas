@@ -162,5 +162,29 @@ class FlightSearch:
         pass
 
     def search_multi_city_flights(self, cities, dates, currency):
-        # बहु-शहर प्रवासासाठी API कॉल करा
-        pass
+        """
+        Searches for multi-city flights using Amadeus API.
+        cities: list of IATA codes, e.g. ['BOM', 'DEL', 'BLR']
+        dates: list of departure dates as strings, e.g. ['2024-07-01', '2024-07-05']
+        """
+        try:
+            # Build slices for each leg
+            slices = []
+            for i in range(len(cities) - 1):
+                slices.append({
+                    "originLocationCode": cities[i],
+                    "destinationLocationCode": cities[i + 1],
+                    "departureDate": dates[i]
+                })
+
+            print("DEBUG: Slices for multi-city search:", slices)  # Debug info
+
+            response = self.amadeus.shopping.flight_offers_search.get(
+                currencyCode=currency,
+                adults=1,
+                slices=slices
+            )
+            return response.data
+        except ResponseError as error:
+            print("DEBUG: Slices at error:", slices)  # Print slices on error as well
+            raise Exception(f"बहु-शहर प्रवास शोधताना त्रुटी आली: {error}")

@@ -25,9 +25,15 @@ def main():
                 return_date = st.date_input("परतीची तारीख")
             elif trip_type == "बहु-शहर":
                 num_cities = st.number_input("शहरांची संख्या", min_value=2, max_value=5, value=2)
-                additional_cities = []
+                city_list = [origin]
+                date_list = []
                 for i in range(num_cities - 1):
-                    additional_cities.append(st.text_input(f"अतिरिक्त शहर {i+1}", f"CITY{i+1}").upper())
+                    next_city = st.text_input(f"अतिरिक्त शहर {i+1}", f"CITY{i+1}").upper()
+                    city_list.append(next_city)
+                    date = st.date_input(f"प्रस्थान तारीख {i+1} ({city_list[i]} → {next_city})")
+                    date_list.append(date)
+                # city_list will be [origin, city2, city3, ...]
+                # date_list will be [date1, date2, ...] for each leg
             
             max_stops = st.selectbox("कमाल थांबे", [0, 1, 2], index=1)
             currency = st.text_input("चलन", "USD")
@@ -86,8 +92,13 @@ def main():
                 st.warning("परतीच्या प्रवासाची सुविधा अद्याप उपलब्ध नाही.")
                 flights = []  # प्लेसहोल्डर
             elif trip_type == "बहु-शहर":
-                st.warning("बहु-शहर प्रवासाची सुविधा अद्याप उपलब्ध नाही.")
-                flights = []  # प्लेसहोल्डर
+                flights = flight_search.search_multi_city_flights(
+                    city_list,
+                    [d.strftime("%Y-%m-%d") for d in date_list],
+                    currency
+                )
+                slices = [{"origin": city_list[i], "destination": city_list[i+1], "date": date_list[i]} for i in range(len(date_list))]
+                st.write("DEBUG: Slices for multi-city search:", slices)
             
             if flights:
                 flight_data = flight_search.extract_flight_data(flights, max_stops)
